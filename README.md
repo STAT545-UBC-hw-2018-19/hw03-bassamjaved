@@ -10,9 +10,9 @@ kableExtra
 
 ### Contents
 
-_hw03_exploration.Rmd_<br/>
-_hw03_exploration.md_<br/>
-folder _hw03_exploration_files_ containing plot images
+[hw03_exploration.Rmd](https://github.com/STAT545-UBC-students/hw03-bassamjaved/blob/master/hw03_exploration.Rmd)
+[hw03_exploration.md](https://github.com/STAT545-UBC-students/hw03-bassamjaved/blob/master/hw03_exploration.md)
+folder [hw03_exploration_files](https://github.com/STAT545-UBC-students/hw03-bassamjaved/tree/master/hw03_exploration_files/figure-gfm) containing plot images
 
 ### Purpose
 
@@ -25,4 +25,4 @@ _GitHub.com username\:_ bassamjaved
 
 ### Link to repository
 
-[STAT545-UBC-students/hw02-bassamjaved](https://github.com/STAT545-UBC-students/hw03-bassamjaved)
+[STAT545-UBC-students/hw03-bassamjaved](https://github.com/STAT545-UBC-students/hw03-bassamjaved)
