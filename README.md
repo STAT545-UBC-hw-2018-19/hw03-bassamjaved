@@ -10,9 +10,12 @@ kableExtra
 
 ### Contents
 
-[hw03_exploration.Rmd](https://github.com/STAT545-UBC-students/hw03-bassamjaved/blob/master/hw03_exploration.Rmd)
-[hw03_exploration.md](https://github.com/STAT545-UBC-students/hw03-bassamjaved/blob/master/hw03_exploration.md)
+[hw03_exploration.Rmd](https://github.com/STAT545-UBC-students/hw03-bassamjaved/blob/master/hw03_exploration.Rmd)<br/>
+[hw03_exploration.md](https://github.com/STAT545-UBC-students/hw03-bassamjaved/blob/master/hw03_exploration.md)<br/>[hw03_exploration.md](https://github.com/STAT545-UBC-students/hw03-bassamjaved/blob/master/hw03_exploration.html)<br/>
 folder [hw03_exploration_files](https://github.com/STAT545-UBC-students/hw03-bassamjaved/tree/master/hw03_exploration_files/figure-gfm) containing plot images
+
+Note that some kableExtra() functions only appear in HTML.<br/>
+HTML file is too large to be viewed on GitHub.com
 
 ### Purpose
 
