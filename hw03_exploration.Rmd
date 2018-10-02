@@ -1,76 +1,90 @@
 ---
 title: "hw03_exploration"
 output: github_document
+always_allow_html: yes
 ---
 
+Author: Bassam Javed (github: bassamjaved)
+
+# Preamble
+
+This file explores use of dplyr and ggplot to manipulate and plot data frames. It uses gapminder as the data set.
+
 ```{r}
+library(kableExtra)
 library(gapminder)
 library(tidyverse)
 ```
 
-# Spread of GDP per capita
+
+# 1) Spread of GDP per capita
+
+**Method:**
+To find the spread of GDP per capita grouped by continent, I first generate a table that groups by continent, and then use the summarize function to find the arguments within it for each continent separately. For the figure, I pass continent and gdpPercap as x and y respectively into a boxplot using ggplot.
 
 ```{r}
 gapminder %>% 
   group_by(continent) %>% 
   summarize(min = min(gdpPercap), #Identify each variable in 5-number summary separately to correspond to a boxplot. Summary() function gives 6 number output, so it can't be output directly otherwise the table and plot wouldn't match
-            firstQ = summary(gdpPercap)[2], #To call 2nd element of summary()
+            firstQ = summary(gdpPercap)[2], #To call 2nd element of summary() ie first quartile
             median = median(gdpPercap),
-            thirdQ = summary(gdpPercap)[4],
+            thirdQ = summary(gdpPercap)[4], #To call 4th element of summary() ie third quartile
             max = max(gdpPercap)) %>% 
-  knitr::kable()
+  knitr::kable(caption = "Table 1: GDP per capita") %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = "striped", position = "center")
   
 gapminder %>% ggplot(aes(continent, gdpPercap)) +
   geom_boxplot(aes(fill = continent)) +
   scale_y_log10() +
   theme_classic() +
-  labs(title = "GDP per capita by continent", x = "Continent", y = "GDP per capita")
+  labs(title = "Figure 1: GDP per capita by continent", x = "Continent", y = "GDP per capita")
   
 
 ```
 
+**Comments:**
+I modified the boxplot with a log scale on the y-axis (GDP per capita) as the continents vary by an order of magnitude in their spread (e.g. Africa is closer to 10^3, whereas Oceania is closer to 10^4).
 
-# Weighted mean of life expectancy weighted by population
+
+# 2) Weighted mean of life expectancy weighted by population
+
+**Method:**
+To find the weighted mean of life expectancy (weighted by population) across continents, I first select a sample range for comparison. I use the first year of data (1952) and compare 25 and 50 years after it. To generate a table, I filter by these three years and group by continent. I then create a new column that contains weighted means. I assign a new variable 'A' to this modified data frame to create a figure. For the figure, I assign continent and weighted mean as x and y respectively into a jitter plot using ggplot.
 
 ```{r}
 #Table
-gapminder
 A <- gapminder %>% 
       filter(year == 1952 | year == 2002 | year == 1977) %>% 
-      group_by(continent, country, year) %>% 
+      group_by(continent, country, year) %>% #Grouping by year in order to facet plot later
       mutate(wm = round(weighted.mean(lifeExp, pop, na.rm = FALSE), digits = 1)) %>% 
-      transmute(lifeExp, pop, wm)
-A
+      transmute(lifeExp, pop, wm) #transmute removes all columns other than the ones specified
+
+knitr::kable(A, caption = "Table 2: Weighted mean of life expectancy by population") %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = "striped", position = "center") %>% 
+  scroll_box(width = "800px", height = "500px")
 
 #Figure
-ggplot(A, aes(x = continent, y = wm, color = continent)) +
-  geom_jitter(alpha = 0.5) + ggtitle("GDP per cap by continent") +
-  labs(title = "Mean of life expectancy weighted by population", 
-       x = "Continent", y = "Weighted mean") +
-  theme_classic() +
-  theme(axis.text.x  = element_text(angle=90, vjust=1, size=8)) +
-  facet_grid(.~year)
-
+  ggplot(A, aes(x = continent, y = wm, color = continent)) +
+  geom_jitter(alpha = 0.5) + 
+  labs(title = "Figure 2: Weighted mean of life expectancy (by population) across continents", 
+       x = "Continent", y = "Life expectancy") + #Add title and axis labels
+  theme_classic() + #Removes grid lines for a cleaner look
+  theme(axis.text.x  = element_text(angle=90, vjust=1, size=8)) + #Adjust x-axis labels
+  facet_grid(.~year) #Facet by year. In this case, 'A' has three years of data.
 ```
 
-# Asian countries that experienced drops in life expectancy
+**Comments:**
+From the figure, we can see that in general, the cluster of weighted means of life expectancy are increasing across the 50-year time period. To be absolutely sure, we could plot weighted means of entire continents across time in a scatterplot. However, I have chosen the above plot as it disaggregates to a cluster of countries within each continent to be observed individually. Furthermore, a jitter plot is more appropriate than a scatter plot as the disaggregation can be observed two-dimensionally.
 
-```{r}
-gapminder %>% 
-  filter(continent == "Asia") %>% 
-  mutate(drop = lifeExp - lag(lifeExp)) %>% 
-  filter(drop < -1, !year == year[1]) %>% #filter out when there is a significant drop which we will set as 1 year less than previous data, and filter out "drop" of first year of data (junk values)
-  distinct(country)
+An interesting observation is that African life expectancies do not seem to have changed much in the 25-year period from 1977 to 2002, as compared to other continents. Europe, on the other hand, tightened up its cluster of weighted means from 1952 to 1977, meaning that more European countries increased to a similar life expectancy. From 1977 to 2002, that European cluster increased on the whole, meaning that across the continent, European life expectancies increased. We will explore this observation in more detail with another plot.
 
-filter(gapminder, country == "Cambodia" | country == "China" | country == "Iraq" | country == "Korea, Dem. Rep.") %>% 
- ggplot(aes(year, lifeExp)) +
-  geom_line(aes(colour = country)) +
-  geom_point(aes(colour = country), size = 1) +
-  theme_classic()
 
-```
+# 3) Life expectancy vs. GDP per capita in Africa and low-income Europe
 
-# Life expectancy vs. GDP per capita in Africa and low-income Europe
+**Method:**
+Let's explore the life expectancies of African countries in more detail. From (1), we saw that Africa's GDP per capita is generally the lowest across continents. From (2), we saw that life expentancies weighted by population of African countries do not seem to have changed much from 1977 to 2002. Do African countries and lower-income countries in Europe have a similar correlation between GDP per capita and life expectancy? (Do people live longer if they have more money in Africa vs. Europe?)
+
+I start by finding the maximum GDP per capita of African countries and setting this as the threshold for "low-income Europe". To generate a table, I filter based on this threshhold and keep data in Africa and Europe. I then group by continent for the table. To generate a plot, I again filter based on the same arguments and then create a hexagonal plot of GDP per capita versus life expectancy.
 
 ```{r}
 filter(gapminder, continent == "Africa") %>% 
@@ -80,10 +94,23 @@ filter(gapminder, continent == "Africa") %>%
 gapminder %>% 
   filter(gdpPercap < max_gdpPercap_Africa, continent == "Africa" | continent == "Europe") %>% 
   group_by(continent) %>% 
-  transmute(country, gdpPercap)
-
+  transmute(country, gdpPercap) %>% 
+  knitr::kable(caption = "Table 3: GDP per capita versus life expectancy in Africa and low-income Europe") %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = "condensed", position = "center") %>% 
+  scroll_box(width = "500px", height = "300px")
 
 filter(gapminder, gdpPercap < max_gdpPercap_Africa,continent == "Africa" | continent == "Europe") %>% 
- ggplot(aes(gdpPercap, lifeExp)) + geom_hex(bins = 30) + facet_wrap(~continent)
+ ggplot(aes(gdpPercap, lifeExp)) +
+  geom_hex(bins = 30) +
+  facet_wrap(~continent) +
+  labs(title = "Figure 3: GDP per capita versus life expectancy in Africa and low-income Europe",
+       x = "Continent",
+       y = "Life expectancy")
 ```
 
+**Comments:**
+A scatterplot with some alpha transparency could have been used, but the colouring of a hex plot is more meaningful for resolution of the data points. I selected bin count as 30 as this provided a reasonable visual resolution for the plot.
+
+We see that European countries seem to have a stronger correlation of GDP per capita with life expectancy. To be sure, we could plot a regression with geom_smooth() but I felt this would draw attention away from the lack of correlation in the African data. Below $5000, the data seems to fit well in Africa, but there is no correlation above this amount. Thus, we can only conclude that GDP per capita is not a strong predictor of African life expectancy. In plain language, having more money in an African country doesn't necessarily mean that one would have a longer life.
+
+### End of file
