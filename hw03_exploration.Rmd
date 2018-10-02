@@ -1,7 +1,6 @@
 ---
 title: "hw03_exploration"
-output: github_document
-always_allow_html: yes
+output: html_document
 ---
 
 Author: Bassam Javed (github: bassamjaved)
