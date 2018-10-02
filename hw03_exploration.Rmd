@@ -1,0 +1,89 @@
+---
+title: "hw03_exploration"
+output: github_document
+---
+
+```{r}
+library(gapminder)
+library(tidyverse)
+```
+
+# Spread of GDP per capita
+
+```{r}
+gapminder %>% 
+  group_by(continent) %>% 
+  summarize(min = min(gdpPercap), #Identify each variable in 5-number summary separately to correspond to a boxplot. Summary() function gives 6 number output, so it can't be output directly otherwise the table and plot wouldn't match
+            firstQ = summary(gdpPercap)[2], #To call 2nd element of summary()
+            median = median(gdpPercap),
+            thirdQ = summary(gdpPercap)[4],
+            max = max(gdpPercap)) %>% 
+  knitr::kable()
+  
+gapminder %>% ggplot(aes(continent, gdpPercap)) +
+  geom_boxplot(aes(fill = continent)) +
+  scale_y_log10() +
+  theme_classic() +
+  labs(title = "GDP per capita by continent", x = "Continent", y = "GDP per capita")
+  
+
+```
+
+
+# Weighted mean of life expectancy weighted by population
+
+```{r}
+#Table
+gapminder
+A <- gapminder %>% 
+      filter(year == 1952 | year == 2002 | year == 1977) %>% 
+      group_by(continent, country, year) %>% 
+      mutate(wm = round(weighted.mean(lifeExp, pop, na.rm = FALSE), digits = 1)) %>% 
+      transmute(lifeExp, pop, wm)
+A
+
+#Figure
+ggplot(A, aes(x = continent, y = wm, color = continent)) +
+  geom_jitter(alpha = 0.5) + ggtitle("GDP per cap by continent") +
+  labs(title = "Mean of life expectancy weighted by population", 
+       x = "Continent", y = "Weighted mean") +
+  theme_classic() +
+  theme(axis.text.x  = element_text(angle=90, vjust=1, size=8)) +
+  facet_grid(.~year)
+
+```
+
+# Asian countries that experienced drops in life expectancy
+
+```{r}
+gapminder %>% 
+  filter(continent == "Asia") %>% 
+  mutate(drop = lifeExp - lag(lifeExp)) %>% 
+  filter(drop < -1, !year == year[1]) %>% #filter out when there is a significant drop which we will set as 1 year less than previous data, and filter out "drop" of first year of data (junk values)
+  distinct(country)
+
+filter(gapminder, country == "Cambodia" | country == "China" | country == "Iraq" | country == "Korea, Dem. Rep.") %>% 
+ ggplot(aes(year, lifeExp)) +
+  geom_line(aes(colour = country)) +
+  geom_point(aes(colour = country), size = 1) +
+  theme_classic()
+
+```
+
+# Life expectancy vs. GDP per capita in Africa and low-income Europe
+
+```{r}
+filter(gapminder, continent == "Africa") %>% 
+  select(gdpPercap) %>% 
+  max() -> max_gdpPercap_Africa
+
+gapminder %>% 
+  filter(gdpPercap < max_gdpPercap_Africa, continent == "Africa" | continent == "Europe") %>% 
+  group_by(continent) %>% 
+  transmute(country, gdpPercap)
+
+
+filter(gapminder, gdpPercap < max_gdpPercap_Africa,continent == "Africa" | continent == "Europe") %>% 
+ ggplot(aes(gdpPercap, lifeExp)) + geom_hex(bins = 30) + facet_wrap(~continent)
+```
+
